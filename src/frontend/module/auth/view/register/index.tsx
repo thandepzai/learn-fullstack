@@ -1,0 +1,84 @@
+"use client";
+
+import { useState } from "react";
+
+export default function RegisterView() {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setError("");
+    setLoading(true);
+
+    const name = String(formData.get("name") || "");
+    const email = String(formData.get("email") || "");
+    const password = String(formData.get("password") || "");
+
+    const res = await fetch("/backend/user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const data = await res.json();
+
+    setLoading(false);
+
+    if (!res.ok) {
+      setError(data.message || "Đăng ký thất bại");
+      return;
+    }
+
+    window.location.href = "/login";
+  }
+
+  return (
+    <div className="max-w-md mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Đăng ký</h1>
+
+      <form action={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block mb-1">Tên</label>
+          <input
+            name="name"
+            type="text"
+            className="w-full border rounded px-3 py-2"
+            placeholder="Nhập tên"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1">Email</label>
+          <input
+            name="email"
+            type="email"
+            className="w-full border rounded px-3 py-2"
+            placeholder="Nhập email"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1">Mật khẩu</label>
+          <input
+            name="password"
+            type="password"
+            className="w-full border rounded px-3 py-2"
+            placeholder="Nhập mật khẩu"
+          />
+        </div>
+
+        {error ? <p className="text-sm text-red-500">{error}</p> : null}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded bg-black py-2 text-white disabled:opacity-50"
+        >
+          {loading ? "Đang tạo tài khoản..." : "Đăng ký"}
+        </button>
+      </form>
+    </div>
+  );
+}
