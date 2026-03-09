@@ -2,36 +2,55 @@
 
 import { useState } from "react";
 
+type RegisterResponse = {
+  success: boolean;
+  message: string;
+  status: number;
+  data: {
+    id: number;
+    name: string | null;
+    email: string;
+  } | null;
+};
+
 export default function RegisterView() {
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setError("");
+    setSuccess("");
     setLoading(true);
 
-    const name = String(formData.get("name") || "");
-    const email = String(formData.get("email") || "");
-    const password = String(formData.get("password") || "");
+    try {
+      const name = String(formData.get("name") || "").trim();
+      const email = String(formData.get("email") || "").trim();
+      const password = String(formData.get("password") || "");
 
-    const res = await fetch("/backend/user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name, email, password }),
-    });
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    const data = await res.json();
+      const data: RegisterResponse = await res.json();
 
-    setLoading(false);
+      if (!res.ok) {
+        setError(data.message || "Đăng ký thất bại");
+        return;
+      }
 
-    if (!res.ok) {
-      setError(data.message || "Đăng ký thất bại");
-      return;
+      setSuccess(data.message || "Đăng ký thành công");
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("REGISTER_FE_ERROR:", error);
+      setError("Có lỗi xảy ra, vui lòng thử lại");
+    } finally {
+      setLoading(false);
     }
-
-    window.location.href = "/login";
   }
 
   return (
@@ -46,6 +65,7 @@ export default function RegisterView() {
             type="text"
             className="w-full border rounded px-3 py-2"
             placeholder="Nhập tên"
+            disabled={loading}
           />
         </div>
 
@@ -56,6 +76,7 @@ export default function RegisterView() {
             type="email"
             className="w-full border rounded px-3 py-2"
             placeholder="Nhập email"
+            disabled={loading}
           />
         </div>
 
@@ -66,10 +87,12 @@ export default function RegisterView() {
             type="password"
             className="w-full border rounded px-3 py-2"
             placeholder="Nhập mật khẩu"
+            disabled={loading}
           />
         </div>
 
         {error ? <p className="text-sm text-red-500">{error}</p> : null}
+        {success ? <p className="text-sm text-green-600">{success}</p> : null}
 
         <button
           type="submit"

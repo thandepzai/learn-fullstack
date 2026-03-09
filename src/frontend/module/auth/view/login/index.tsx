@@ -5,26 +5,47 @@ import { useState } from "react";
 
 export default function LoginView() {
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setError("");
+    setLoading(true);
 
-    const email = String(formData.get("email") || "");
-    const password = String(formData.get("password") || "");
+    try {
+      const email = String(formData.get("email") || "")
+        .trim()
+        .toLowerCase();
+      const password = String(formData.get("password") || "");
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-      callbackUrl: "/",
-    });
+      if (!email || !password) {
+        setError("Vui lòng nhập email và mật khẩu");
+        return;
+      }
 
-    if (result?.error) {
-      setError("Email hoặc mật khẩu không đúng");
-      return;
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: "/",
+      });
+
+      if (!result) {
+        setError("Không thể đăng nhập");
+        return;
+      }
+
+      if (result.error) {
+        setError("Email hoặc mật khẩu không đúng");
+        return;
+      }
+
+      window.location.href = result.url || "/";
+    } catch (error) {
+      console.error("LOGIN_FE_ERROR:", error);
+      setError("Có lỗi xảy ra, vui lòng thử lại");
+    } finally {
+      setLoading(false);
     }
-
-    window.location.href = "/";
   }
 
   return (
@@ -39,6 +60,7 @@ export default function LoginView() {
             type="email"
             className="w-full border rounded px-3 py-2"
             placeholder="Nhập email"
+            disabled={loading}
           />
         </div>
 
@@ -49,6 +71,7 @@ export default function LoginView() {
             type="password"
             className="w-full border rounded px-3 py-2"
             placeholder="Nhập mật khẩu"
+            disabled={loading}
           />
         </div>
 
@@ -56,9 +79,10 @@ export default function LoginView() {
 
         <button
           type="submit"
-          className="w-full rounded bg-black py-2 text-white"
+          disabled={loading}
+          className="w-full rounded bg-black py-2 text-white disabled:opacity-50"
         >
-          Đăng nhập
+          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
       </form>
     </div>
