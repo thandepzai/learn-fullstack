@@ -1,9 +1,25 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+type LoginResponse = {
+  success: boolean;
+  message: string;
+  status: number;
+  data: {
+    user: {
+      id: number;
+      name: string | null;
+      email: string;
+    };
+    accessToken: string;
+    refreshToken: string;
+  } | null;
+};
+
 export default function LoginView() {
+  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,24 +38,26 @@ export default function LoginView() {
         return;
       }
 
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-        callbackUrl: "/",
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (!result) {
-        setError("Không thể đăng nhập");
+      const data: LoginResponse = await res.json();
+
+      if (!res.ok || !data || !data.data) {
+        setError(data.message || "Đăng nhập thất bại");
         return;
       }
 
-      if (result.error) {
-        setError("Email hoặc mật khẩu không đúng");
-        return;
-      }
+      localStorage.setItem("ACCESS_TOKEN", data.data.accessToken);
+      localStorage.setItem("REFRESH_TOKEN", data.data.refreshToken);
+      localStorage.setItem("USER_INFO", JSON.stringify(data.data.user));
 
-      window.location.href = result.url || "/";
+      router.push("/");
     } catch (error) {
       console.error("LOGIN_FE_ERROR:", error);
       setError("Có lỗi xảy ra, vui lòng thử lại");

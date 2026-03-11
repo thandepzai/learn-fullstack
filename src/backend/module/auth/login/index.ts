@@ -1,5 +1,10 @@
 import bcrypt from "bcrypt";
 import prisma from "@/backend/lib/prisma";
+import {
+  signAccessToken,
+  signRefreshToken,
+  TIME_REFRESH_TOKEN_DAY,
+} from "@/backend/lib/jwt";
 
 type LoginPayload = {
   email: string;
@@ -12,9 +17,13 @@ type LoginResult =
       message: string;
       status: 200;
       data: {
-        id: number;
-        email: string;
-        name: string | null;
+        user: {
+          id: number;
+          email: string;
+          name: string | null;
+        };
+        accessToken: string;
+        refreshToken: string;
       };
     }
   | {
@@ -73,14 +82,40 @@ export async function loginUser(payload: LoginPayload): Promise<LoginResult> {
       };
     }
 
+    const accessToken = signAccessToken({
+      userId: user.id,
+      email: user.email,
+    });
+
+    const refreshToken = signRefreshToken({
+      userId: user.id,
+      email: user.email,
+    });
+
+    const refreshTokenExpiresAt = new Date(
+      Date.now() + TIME_REFRESH_TOKEN_DAY * 24 * 60 * 60 * 1000,
+    );
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        refreshToken,
+        refreshTokenExpiresAt,
+      },
+    });
+
     return {
       success: true,
       message: "Đăng nhập thành công",
       status: 200,
       data: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+        accessToken,
+        refreshToken,
       },
     };
   } catch (error) {
