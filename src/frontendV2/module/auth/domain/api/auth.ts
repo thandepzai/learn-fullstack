@@ -1,4 +1,4 @@
-import apiClient from "@/frontend/module/lib/api/request";
+import apiClient from "@/frontendV2/lib/api/request";
 import { LoginDTO, RegisterDTO } from "../dto/auth";
 import { AuthEndpoint } from "../../endpointUrl";
 

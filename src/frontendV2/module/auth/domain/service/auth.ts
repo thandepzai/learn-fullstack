@@ -1,10 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LoginDTO, RegisterDTO, UserDTO } from "../dto/auth";
 import { AuthApi } from "../api/auth";
-import {
-  IFetcherOptions,
-  useFetcher,
-} from "@/frontend/module/lib/hook/useFetcher";
+import { IFetcherOptions, useFetcher } from "@/frontendV2/lib/hook/useFetcher";
 
 interface UseMeOptions {
   fetcherOptions?: IFetcherOptions<UserDTO>;
