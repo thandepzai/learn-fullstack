@@ -1,5 +1,5 @@
-import LoginView from "@/frontendV2/module/auth/view/login";
+import LoginView from "@/frontend/modules/auth/pages/login";
 
-export default function LoginPage() {
-  return <LoginView />;
-}
+const LoginPage = () => <LoginView />;
+
+export default LoginPage

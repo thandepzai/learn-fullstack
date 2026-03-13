@@ -1,5 +1,6 @@
 "use client";
 
+import { authApi } from "@/frontend/modules/auth/api/auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -38,24 +39,11 @@ export default function LoginView() {
         return;
       }
 
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await authApi.login({ email, password });
 
-      const data: LoginResponse = await res.json();
-
-      if (!res.ok || !data || !data.data) {
-        setError(data.message || "Đăng nhập thất bại");
-        return;
-      }
-
-      localStorage.setItem("ACCESS_TOKEN", data.data.accessToken);
-      localStorage.setItem("REFRESH_TOKEN", data.data.refreshToken);
-      localStorage.setItem("USER_INFO", JSON.stringify(data.data.user));
+      localStorage.setItem("ACCESS_TOKEN", data.accessToken);
+      localStorage.setItem("REFRESH_TOKEN", data.refreshToken);
+      localStorage.setItem("USER_INFO", JSON.stringify(data.user));
 
       router.push("/");
     } catch (error) {
